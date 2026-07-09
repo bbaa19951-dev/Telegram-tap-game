@@ -106,4 +106,91 @@ export async function getReferralStats(token: string) {
     throw new Error(err.error);
   }
   return res.json();
-    }
+    }const ADMIN_STATS_URL = import.meta.env.VITE_ADMIN_STATS_URL;
+const ADMIN_USERS_URL = import.meta.env.VITE_ADMIN_USERS_URL;
+const ADMIN_PAYMENTS_URL = import.meta.env.VITE_ADMIN_PAYMENTS_URL;
+const ADMIN_WITHDRAWALS_URL = import.meta.env.VITE_ADMIN_WITHDRAWALS_URL;
+const REQUEST_WITHDRAWAL_URL = import.meta.env.VITE_REQUEST_WITHDRAWAL_URL;
+const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
+
+// Admin APIs
+export async function getAdminStats(token: string) {
+  const res = await fetch(ADMIN_STATS_URL, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function getAdminUsers(token: string, search?: string) {
+  const url = new URL(ADMIN_USERS_URL);
+  if (search) url.searchParams.set("search", search);
+  const res = await fetch(url, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function banUser(token: string, userId: string) {
+  const url = new URL(ADMIN_USERS_URL);
+  url.searchParams.set("action", "ban");
+  url.searchParams.set("user_id", userId);
+  const res = await fetch(url, { method: "POST", headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function unbanUser(token: string, userId: string) {
+  const url = new URL(ADMIN_USERS_URL);
+  url.searchParams.set("action", "unban");
+  url.searchParams.set("user_id", userId);
+  const res = await fetch(url, { method: "POST", headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function getAdminPayments(token: string) {
+  const res = await fetch(ADMIN_PAYMENTS_URL, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function processPayment(token: string, paymentId: string, action: "approve" | "reject", level?: string) {
+  const res = await fetch(ADMIN_PAYMENTS_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ paymentId, action, level }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function getAdminWithdrawals(token: string) {
+  const res = await fetch(ADMIN_WITHDRAWALS_URL, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function processWithdrawal(token: string, withdrawalId: string, action: "approve" | "reject") {
+  const res = await fetch(ADMIN_WITHDRAWALS_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ withdrawalId, action }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+// User withdrawal APIs
+export async function requestWithdrawal(token: string, points: number, bankDetails: string) {
+  const res = await fetch(REQUEST_WITHDRAWAL_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ points, bank_details: bankDetails }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function getUserWithdrawals(token: string) {
+  const res = await fetch(GET_WITHDRAWALS_URL, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
