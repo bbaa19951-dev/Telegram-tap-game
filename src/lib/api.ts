@@ -194,3 +194,20 @@ export async function getUserWithdrawals(token: string) {
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
+const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
+const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
+
+export async function claimAdReward(token: string) {
+  const res = await fetch(AD_REWARD_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
+
+export async function getAdStats(token: string) {
+  const res = await fetch(AD_STATS_URL, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
