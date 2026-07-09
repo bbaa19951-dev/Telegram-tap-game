@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { requestWithdrawal, getUserWithdrawals } from "../lib/api";
-import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Withdraw() {
   const { token } = useAuth();
@@ -75,4 +74,4 @@ export default function Withdraw() {
       </div>
     </div>
   );
-          }
+}
