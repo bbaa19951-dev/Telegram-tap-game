@@ -9,7 +9,7 @@ const MAX_TAPS = 5000;
 const TAP_BATCH_SIZE = 10;
 
 export default function Home() {
-  const { token, logout } = useAuth();
+  const { token } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [localTaps, setLocalTaps] = useState(0);
   const [isSending, setIsSending] = useState(false);
@@ -232,4 +232,4 @@ export default function Home() {
       <BottomNav />
     </div>
   );
-            }
+  }
