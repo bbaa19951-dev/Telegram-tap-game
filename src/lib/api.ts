@@ -96,4 +96,15 @@ export async function sendTaps(token: string, tapCount: number) {
     throw new Error(err.error);
   }
   return res.json();
-}
+}const REFERRAL_STATS_URL = import.meta.env.VITE_REFERRAL_STATS_URL;
+
+export async function getReferralStats(token: string) {
+  const res = await fetch(REFERRAL_STATS_URL, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
+    }
