@@ -1,28 +1,22 @@
-import { useEffect } from "react";
-import { useTelegram } from "./hooks/useTelegram";
+// src/App.tsx
 
-function App() {
-  const { tg, user } = useTelegram();
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import LoadingSpinner from "./components/LoadingSpinner";
 
-  useEffect(() => {
-    if (tg) {
-      tg.ready();
-      tg.expand();
-    }
-  }, [tg]);
+function AppContent() {
+  const { user, loading } = useAuth();
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="glass rounded-2xl p-8 text-center">
-        <h1 className="text-2xl font-bold text-gold mb-2">Tap to Earn</h1>
-        {user ? (
-          <p>Welcome, {user.first_name}!</p>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
-    </div>
-  );
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Login />;
+  return <Home />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
