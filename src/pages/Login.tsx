@@ -1,5 +1,4 @@
 // src/pages/Login.tsx
-
 import { useTelegram } from "../hooks/useTelegram";
 import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
@@ -10,6 +9,13 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Extract start_param from Telegram initData (referral code)
+  const getStartParam = (): string | undefined => {
+    if (!initData) return undefined;
+    const params = new URLSearchParams(initData);
+    return params.get("start_param") || undefined;
+  };
+
   const handleLogin = async () => {
     if (!initData) {
       setError("Open this app inside Telegram");
@@ -18,7 +24,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(initData);
+      const referralCode = getStartParam();
+      await login(initData, referralCode);
     } catch (err: any) {
       setError(err.message);
     } finally {
