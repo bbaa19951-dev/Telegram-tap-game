@@ -23,7 +23,32 @@ export async function authenticateTelegram(initData: string): Promise<AuthRespon
   });
 
   if (!res.ok) {
+    const err = await res.json();const DAILY_REWARD_URL = import.meta.env.VITE_DAILY_REWARD_FUNCTION_URL;
+const AUTO_TAP_URL = import.meta.env.VITE_AUTO_TAP_FUNCTION_URL;
+
+export async function claimDailyReward(token: string) {
+  const res = await fetch(DAILY_REWARD_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
     const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
+}
+
+export async function claimAutoTap(token: string) {
+  const res = await fetch(AUTO_TAP_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
+}
     throw new Error(err.error || "Authentication failed");
   }
 
