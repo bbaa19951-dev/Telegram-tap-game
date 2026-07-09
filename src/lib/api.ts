@@ -1,7 +1,26 @@
 // src/lib/api.ts
 
+// -----------------------------------------------
+// Base URLs from environment
+// -----------------------------------------------
 const AUTH_URL = import.meta.env.VITE_AUTH_FUNCTION_URL;
+const PROFILE_URL = import.meta.env.VITE_PROFILE_FUNCTION_URL;
+const TAP_URL = import.meta.env.VITE_TAP_FUNCTION_URL;
+const DAILY_REWARD_URL = import.meta.env.VITE_DAILY_REWARD_FUNCTION_URL;
+const AUTO_TAP_URL = import.meta.env.VITE_AUTO_TAP_FUNCTION_URL;
+const REFERRAL_STATS_URL = import.meta.env.VITE_REFERRAL_STATS_URL;
+const ADMIN_STATS_URL = import.meta.env.VITE_ADMIN_STATS_URL;
+const ADMIN_USERS_URL = import.meta.env.VITE_ADMIN_USERS_URL;
+const ADMIN_PAYMENTS_URL = import.meta.env.VITE_ADMIN_PAYMENTS_URL;
+const ADMIN_WITHDRAWALS_URL = import.meta.env.VITE_ADMIN_WITHDRAWALS_URL;
+const REQUEST_WITHDRAWAL_URL = import.meta.env.VITE_REQUEST_WITHDRAWAL_URL;
+const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
+const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
+const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
 
+// -----------------------------------------------
+// Types
+// -----------------------------------------------
 interface TelegramUser {
   id: number;
   first_name: string;
@@ -15,16 +34,79 @@ interface AuthResponse {
   user: TelegramUser;
 }
 
-export async function authenticateTelegram(initData: string, referralCode?: string): Promise<AuthResponse> {
+interface Profile {
+  telegram_id: number;
+  membership_level: string;
+  total_points: number;
+  energy: number;
+  max_energy: number;
+  tap_count_today: number;
+  points_today: number;
+  auto_tap_pending?: number;
+  daily_reward_claimed?: boolean;
+  is_admin?: boolean;
+}
+
+// -----------------------------------------------
+// Helpers
+// -----------------------------------------------
+export function authHeaders(token: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+// -----------------------------------------------
+// Auth
+// -----------------------------------------------
+export async function authenticateTelegram(
+  initData: string,
+  referralCode?: string
+): Promise<AuthResponse> {
   const body: any = { initData };
   if (referralCode) body.referral_code = referralCode;
+
   const res = await fetch(AUTH_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  // ...
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Authentication failed");
+  }
+  return res.json();
 }
+
+// -----------------------------------------------
+// Profile & Game
+// -----------------------------------------------
+export async function getProfile(token: string): Promise<Profile> {
+  const res = await fetch(PROFILE_URL, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
+}
+
+export async function sendTaps(token: string, tapCount: number) {
+  const res = await fetch(TAP_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ tap_count: tapCount }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
+}
+
 export async function claimDailyReward(token: string) {
   const res = await fetch(DAILY_REWARD_URL, {
     method: "POST",
@@ -48,55 +130,10 @@ export async function claimAutoTap(token: string) {
   }
   return res.json();
 }
-    throw new Error(err.error || "Authentication failed");
-  }
 
-  return res.json();
-}
-
-// Helper to create headers with JWT for future authenticated requests
-export function authHeaders(token: string): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}const PROFILE_URL = import.meta.env.VITE_PROFILE_FUNCTION_URL;
-const TAP_URL = import.meta.env.VITE_TAP_FUNCTION_URL;
-
-interface Profile {
-  telegram_id: number;
-  membership_level: string;
-  total_points: number;
-  energy: number;
-  max_energy: number;
-  tap_count_today: number;
-  points_today: number;
-}
-
-export async function getProfile(token: string): Promise<Profile> {
-  const res = await fetch(PROFILE_URL, {
-    headers: authHeaders(token),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
-  return res.json();
-}
-
-export async function sendTaps(token: string, tapCount: number) {
-  const res = await fetch(TAP_URL, {
-    method: "POST",
-    headers: authHeaders(token),
-    body: JSON.stringify({ tap_count: tapCount }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
-  return res.json();
-}const REFERRAL_STATS_URL = import.meta.env.VITE_REFERRAL_STATS_URL;
-
+// -----------------------------------------------
+// Referral
+// -----------------------------------------------
 export async function getReferralStats(token: string) {
   const res = await fetch(REFERRAL_STATS_URL, {
     headers: authHeaders(token),
@@ -106,14 +143,11 @@ export async function getReferralStats(token: string) {
     throw new Error(err.error);
   }
   return res.json();
-    }const ADMIN_STATS_URL = import.meta.env.VITE_ADMIN_STATS_URL;
-const ADMIN_USERS_URL = import.meta.env.VITE_ADMIN_USERS_URL;
-const ADMIN_PAYMENTS_URL = import.meta.env.VITE_ADMIN_PAYMENTS_URL;
-const ADMIN_WITHDRAWALS_URL = import.meta.env.VITE_ADMIN_WITHDRAWALS_URL;
-const REQUEST_WITHDRAWAL_URL = import.meta.env.VITE_REQUEST_WITHDRAWAL_URL;
-const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
+}
 
+// -----------------------------------------------
 // Admin APIs
+// -----------------------------------------------
 export async function getAdminStats(token: string) {
   const res = await fetch(ADMIN_STATS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
@@ -152,7 +186,12 @@ export async function getAdminPayments(token: string) {
   return res.json();
 }
 
-export async function processPayment(token: string, paymentId: string, action: "approve" | "reject", level?: string) {
+export async function processPayment(
+  token: string,
+  paymentId: string,
+  action: "approve" | "reject",
+  level?: string
+) {
   const res = await fetch(ADMIN_PAYMENTS_URL, {
     method: "POST",
     headers: authHeaders(token),
@@ -168,7 +207,11 @@ export async function getAdminWithdrawals(token: string) {
   return res.json();
 }
 
-export async function processWithdrawal(token: string, withdrawalId: string, action: "approve" | "reject") {
+export async function processWithdrawal(
+  token: string,
+  withdrawalId: string,
+  action: "approve" | "reject"
+) {
   const res = await fetch(ADMIN_WITHDRAWALS_URL, {
     method: "POST",
     headers: authHeaders(token),
@@ -178,8 +221,14 @@ export async function processWithdrawal(token: string, withdrawalId: string, act
   return res.json();
 }
 
-// User withdrawal APIs
-export async function requestWithdrawal(token: string, points: number, bankDetails: string) {
+// -----------------------------------------------
+// User Withdrawal APIs
+// -----------------------------------------------
+export async function requestWithdrawal(
+  token: string,
+  points: number,
+  bankDetails: string
+) {
   const res = await fetch(REQUEST_WITHDRAWAL_URL, {
     method: "POST",
     headers: authHeaders(token),
@@ -194,9 +243,10 @@ export async function getUserWithdrawals(token: string) {
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
-const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
-const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
 
+// -----------------------------------------------
+// Ad Reward & Stats
+// -----------------------------------------------
 export async function claimAdReward(token: string) {
   const res = await fetch(AD_REWARD_URL, {
     method: "POST",
