@@ -1,5 +1,4 @@
 // src/contexts/AuthContext.tsx
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { authenticateTelegram } from "../lib/api";
 
@@ -15,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (initData: string) => Promise<void>;
+  login: (initData: string, referralCode?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -32,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for saved session
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
@@ -43,15 +41,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-const login = async (initData: string, referralCode?: string) => {
-  setLoading(true);
-  try {
-    // Pass referral code to the auth endpoint
-    const body: any = { initData };
-    if (referralCode) body.referral_code = referralCode;
-    const { token, user } = await authenticateTelegram(initData, referralCode);
-    // ... (rest stays same)
-  
+  const login = async (initData: string, referralCode?: string) => {
+    setLoading(true);
+    try {
+      const { token, user } = await authenticateTelegram(initData, referralCode);
+      setToken(token);
+      setUser(user);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const logout = () => {
     setToken(null);
