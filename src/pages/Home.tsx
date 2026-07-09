@@ -1,8 +1,9 @@
 // src/pages/Home.tsx
-import { useAuth } from "../contexts/AuthContext";
-import { getProfile, sendTaps, claimDailyReward, claimAutoTap } from "../lib/api";
 import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { getProfile, sendTaps, claimDailyReward, claimAutoTap, claimAdReward } from "../lib/api";
 import LoadingSpinner from "../components/LoadingSpinner";
+import BottomNav from "../components/BottomNav";
 
 const MAX_TAPS = 5000;
 const TAP_BATCH_SIZE = 10;
@@ -14,6 +15,7 @@ export default function Home() {
   const [isSending, setIsSending] = useState(false);
   const [claimingDaily, setClaimingDaily] = useState(false);
   const [claimingAuto, setClaimingAuto] = useState(false);
+  const [adLoading, setAdLoading] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     if (!token) return;
@@ -107,10 +109,10 @@ export default function Home() {
       setProfile((prev: any) => ({
         ...prev,
         total_points: res.new_balance,
-        auto_tap_pending: 0, // reset pending
+        auto_tap_pending: 0,
       }));
       alert(`+${res.points_claimed.toLocaleString()} auto tap points!`);
-      fetchProfile(); // refresh to get new pending
+      fetchProfile();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -118,10 +120,27 @@ export default function Home() {
     }
   };
 
-  if (!profile) return <div className="flex justify-center p-8"><LoadingSpinner /></div>;
+  const handleAd = async () => {
+    if (!token || adLoading) return;
+    setAdLoading(true);
+    try {
+      const res = await claimAdReward(token);
+      setProfile((prev: any) => ({
+        ...prev,
+        total_points: res.new_balance,
+      }));
+      alert(`+${res.points_earned} ad points!`);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setAdLoading(false);
+    }
+  };
+
+  if (!profile) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen p-4 flex flex-col items-center gap-4">
+    <div className="min-h-screen p-4 pb-20 flex flex-col items-center gap-4">
       {/* Points & Level */}
       <div className="w-full max-w-sm glass rounded-2xl p-6 text-center">
         <div className="text-sm text-gray-400">Membership</div>
@@ -140,7 +159,7 @@ export default function Home() {
         </div>
         <div className="w-full bg-gray-700 rounded-full h-3">
           <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full"
-               style={{ width: `${(profile.energy / profile.max_energy) * 100}%` }} />
+            style={{ width: `${(profile.energy / profile.max_energy) * 100}%` }} />
         </div>
         <div className="text-xs text-gray-400 mt-2">Taps today: {profile.tap_count_today + localTaps}/{MAX_TAPS}</div>
       </div>
@@ -195,11 +214,22 @@ export default function Home() {
                 : "Claim Auto Tap"}
           </button>
         </div>
+
+        {/* Watch Ad Button */}
+        <button
+          onClick={handleAd}
+          disabled={adLoading || profile.membership_level === "Free"}
+          className={`w-full py-3 rounded-xl font-semibold ${
+            profile.membership_level === "Free"
+              ? "bg-gray-700 text-gray-400"
+              : "bg-orange-600 text-white hover:bg-orange-500"
+          }`}
+        >
+          {adLoading ? "Verifying..." : "🎥 Watch Ad & Earn"}
+        </button>
       </div>
 
-      <button onClick={logout} className="text-sm text-gray-500 underline mt-4">
-        Logout
-      </button>
+      <BottomNav />
     </div>
   );
-        }
+            }
