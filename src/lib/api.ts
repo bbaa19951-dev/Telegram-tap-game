@@ -36,4 +36,39 @@ export function authHeaders(token: string): HeadersInit {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+}const PROFILE_URL = import.meta.env.VITE_PROFILE_FUNCTION_URL;
+const TAP_URL = import.meta.env.VITE_TAP_FUNCTION_URL;
+
+interface Profile {
+  telegram_id: number;
+  membership_level: string;
+  total_points: number;
+  energy: number;
+  max_energy: number;
+  tap_count_today: number;
+  points_today: number;
+}
+
+export async function getProfile(token: string): Promise<Profile> {
+  const res = await fetch(PROFILE_URL, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
+}
+
+export async function sendTaps(token: string, tapCount: number) {
+  const res = await fetch(TAP_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ tap_count: tapCount }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error);
+  }
+  return res.json();
 }
