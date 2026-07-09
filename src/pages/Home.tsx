@@ -1,19 +1,20 @@
 // src/pages/Home.tsx
-import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
-import { getProfile, sendTaps } from "../lib/api";
+import { getProfile, sendTaps, claimDailyReward, claimAutoTap } from "../lib/api";
 import { useEffect, useState, useCallback } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const MAX_TAPS = 5000;
-const TAP_BATCH_SIZE = 10; // send to server every 10 taps
+const TAP_BATCH_SIZE = 10;
 
 export default function Home() {
   const { token, logout } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [localTaps, setLocalTaps] = useState(0);
   const [isSending, setIsSending] = useState(false);
+  const [claimingDaily, setClaimingDaily] = useState(false);
+  const [claimingAuto, setClaimingAuto] = useState(false);
 
-  // Fetch user data
   const fetchProfile = useCallback(async () => {
     if (!token) return;
     try {
@@ -28,13 +29,12 @@ export default function Home() {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Send accumulated taps to server
+  // Sync taps
   const syncTaps = useCallback(async () => {
     if (localTaps <= 0 || !token || isSending) return;
     setIsSending(true);
     try {
       const result = await sendTaps(token, localTaps);
-      // Update profile with new balance and energy from server
       setProfile((prev: any) => ({
         ...prev,
         total_points: result.new_balance,
@@ -49,16 +49,19 @@ export default function Home() {
     }
   }, [localTaps, token, isSending]);
 
-  // Auto-sync when localTaps reaches BATCH_SIZE or user stops tapping (debounce)
   useEffect(() => {
-    if (localTaps >= TAP_BATCH_SIZE) {
-      syncTaps();
-    }
-    const timeout = setTimeout(() => {
-      if (localTaps > 0) syncTaps();
-    }, 3000); // sync after 3 seconds of inactivity
+    if (localTaps >= TAP_BATCH_SIZE) syncTaps();
+    const timeout = setTimeout(() => { if (localTaps > 0) syncTaps(); }, 3000);
     return () => clearTimeout(timeout);
   }, [localTaps, syncTaps]);
+
+  const multiplierFromLevel = (level: string): number => {
+    const m: Record<string, number> = {
+      Free: 0, Wood: 3.33, Bronze: 9.99, Silver: 33.3,
+      Gold: 66.6, Diamond: 99.9, Legend: 199.8,
+    };
+    return m[level] || 0;
+  };
 
   const handleTap = () => {
     if (!profile) return;
@@ -67,38 +70,60 @@ export default function Home() {
       return;
     }
     if (profile.energy <= 0) {
-      alert("No energy left. Wait for it to recharge.");
+      alert("No energy left");
       return;
     }
-    // Optimistic update
     setProfile((prev: any) => ({
       ...prev,
       energy: prev.energy - 1,
-      total_points: prev.total_points + (multiplierFromLevel(prev.membership_level)),
+      total_points: prev.total_points + multiplierFromLevel(prev.membership_level),
     }));
     setLocalTaps((prev) => prev + 1);
   };
 
-  // Compute multiplier based on membership (for optimistic display)
-  const multiplierFromLevel = (level: string): number => {
-    const m: Record<string, number> = {
-      Free: 0,
-      Wood: 3.33,
-      Bronze: 9.99,
-      Silver: 33.3,
-      Gold: 66.6,
-      Diamond: 99.9,
-      Legend: 199.8,
-    };
-    return m[level] || 0;
+  const handleDailyReward = async () => {
+    if (!token || claimingDaily) return;
+    setClaimingDaily(true);
+    try {
+      const res = await claimDailyReward(token);
+      setProfile((prev: any) => ({
+        ...prev,
+        total_points: res.new_balance,
+        daily_reward_claimed: true,
+      }));
+      alert(`+${res.points_earned.toLocaleString()} points!`);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setClaimingDaily(false);
+    }
+  };
+
+  const handleAutoTap = async () => {
+    if (!token || claimingAuto) return;
+    setClaimingAuto(true);
+    try {
+      const res = await claimAutoTap(token);
+      setProfile((prev: any) => ({
+        ...prev,
+        total_points: res.new_balance,
+        auto_tap_pending: 0, // reset pending
+      }));
+      alert(`+${res.points_claimed.toLocaleString()} auto tap points!`);
+      fetchProfile(); // refresh to get new pending
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setClaimingAuto(false);
+    }
   };
 
   if (!profile) return <div className="flex justify-center p-8"><LoadingSpinner /></div>;
 
   return (
-    <div className="min-h-screen p-4 flex flex-col items-center">
+    <div className="min-h-screen p-4 flex flex-col items-center gap-4">
       {/* Points & Level */}
-      <div className="w-full max-w-sm glass rounded-2xl p-6 mb-4 text-center">
+      <div className="w-full max-w-sm glass rounded-2xl p-6 text-center">
         <div className="text-sm text-gray-400">Membership</div>
         <div className="text-xl font-bold text-gold">{profile.membership_level}</div>
         <div className="text-3xl font-bold mt-2">
@@ -107,17 +132,15 @@ export default function Home() {
         <div className="text-sm text-gray-300">Points</div>
       </div>
 
-      {/* Energy Bar */}
-      <div className="w-full max-w-sm glass rounded-xl p-4 mb-6">
+      {/* Energy & Taps */}
+      <div className="w-full max-w-sm glass rounded-xl p-4">
         <div className="flex justify-between text-sm mb-1">
           <span>⚡ Energy</span>
           <span>{profile.energy}/{profile.max_energy}</span>
         </div>
         <div className="w-full bg-gray-700 rounded-full h-3">
-          <div
-            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full"
-            style={{ width: `${(profile.energy / profile.max_energy) * 100}%` }}
-          />
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full"
+               style={{ width: `${(profile.energy / profile.max_energy) * 100}%` }} />
         </div>
         <div className="text-xs text-gray-400 mt-2">Taps today: {profile.tap_count_today + localTaps}/{MAX_TAPS}</div>
       </div>
@@ -126,16 +149,57 @@ export default function Home() {
       <button
         onClick={handleTap}
         disabled={isSending}
-        className="w-40 h-40 rounded-full bg-gradient-to-b from-yellow-400 to-amber-600 shadow-2xl flex items-center justify-center text-4xl font-black text-black active:scale-95 transition transform duration-75 select-none focus:outline-none"
+        className="w-36 h-36 rounded-full bg-gradient-to-b from-yellow-400 to-amber-600 shadow-2xl flex items-center justify-center text-3xl font-black text-black active:scale-95 transition select-none focus:outline-none"
       >
         TAP
       </button>
 
-      <div className="mt-6">
-        <button onClick={logout} className="text-sm text-gray-500 underline">
-          Logout
+      {/* Rewards Section */}
+      <div className="w-full max-w-sm flex flex-col gap-3">
+        {/* Daily Reward */}
+        <button
+          onClick={handleDailyReward}
+          disabled={profile.daily_reward_claimed || claimingDaily || profile.membership_level === "Free"}
+          className={`w-full py-3 rounded-xl font-semibold ${
+            profile.daily_reward_claimed || profile.membership_level === "Free"
+              ? "bg-gray-700 text-gray-400"
+              : "bg-blue-600 text-white hover:bg-blue-500"
+          }`}
+        >
+          {profile.membership_level === "Free"
+            ? "Daily Reward (Premium Only)"
+            : profile.daily_reward_claimed
+              ? "Daily Reward Claimed ✓"
+              : claimingDaily
+                ? "Claiming..."
+                : "Claim Daily Reward"}
         </button>
+
+        {/* Auto Tap */}
+        <div className="glass rounded-xl p-4 text-center">
+          <div className="text-sm text-gray-400 mb-1">Auto Tap Pending</div>
+          <div className="text-xl font-bold">{profile.auto_tap_pending?.toLocaleString() || "0"} points</div>
+          <button
+            onClick={handleAutoTap}
+            disabled={profile.auto_tap_pending <= 0 || claimingAuto || profile.membership_level === "Free"}
+            className={`mt-2 w-full py-2 rounded-lg text-sm font-semibold ${
+              profile.auto_tap_pending > 0 && profile.membership_level !== "Free"
+                ? "bg-purple-600 text-white hover:bg-purple-500"
+                : "bg-gray-700 text-gray-400"
+            }`}
+          >
+            {profile.membership_level === "Free"
+              ? "Auto Tap (Premium Only)"
+              : claimingAuto
+                ? "Claiming..."
+                : "Claim Auto Tap"}
+          </button>
+        </div>
       </div>
+
+      <button onClick={logout} className="text-sm text-gray-500 underline mt-4">
+        Logout
+      </button>
     </div>
   );
-      }
+        }
