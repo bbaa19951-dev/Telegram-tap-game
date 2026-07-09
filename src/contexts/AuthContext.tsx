@@ -43,21 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = async (initData: string) => {
-    setLoading(true);
-    try {
-      const { token, user } = await authenticateTelegram(initData);
-      setToken(token);
-      setUser(user);
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-    } catch (err) {
-      console.error(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+const login = async (initData: string, referralCode?: string) => {
+  setLoading(true);
+  try {
+    // Pass referral code to the auth endpoint
+    const body: any = { initData };
+    if (referralCode) body.referral_code = referralCode;
+    const { token, user } = await authenticateTelegram(initData, referralCode);
+    // ... (rest stays same)
+  
 
   const logout = () => {
     setToken(null);
