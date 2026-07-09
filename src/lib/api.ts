@@ -15,17 +15,16 @@ interface AuthResponse {
   user: TelegramUser;
 }
 
-export async function authenticateTelegram(initData: string): Promise<AuthResponse> {
+export async function authenticateTelegram(initData: string, referralCode?: string): Promise<AuthResponse> {
+  const body: any = { initData };
+  if (referralCode) body.referral_code = referralCode;
   const res = await fetch(AUTH_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ initData }),
+    body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    const err = await res.json();const DAILY_REWARD_URL = import.meta.env.VITE_DAILY_REWARD_FUNCTION_URL;
-const AUTO_TAP_URL = import.meta.env.VITE_AUTO_TAP_FUNCTION_URL;
-
+  // ...
+}
 export async function claimDailyReward(token: string) {
   const res = await fetch(DAILY_REWARD_URL, {
     method: "POST",
