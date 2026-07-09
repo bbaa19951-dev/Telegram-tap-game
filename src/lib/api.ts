@@ -1,0 +1,39 @@
+// src/lib/api.ts
+
+const AUTH_URL = import.meta.env.VITE_AUTH_FUNCTION_URL;
+
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+}
+
+interface AuthResponse {
+  token: string;
+  user: TelegramUser;
+}
+
+export async function authenticateTelegram(initData: string): Promise<AuthResponse> {
+  const res = await fetch(AUTH_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ initData }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Authentication failed");
+  }
+
+  return res.json();
+}
+
+// Helper to create headers with JWT for future authenticated requests
+export function authHeaders(token: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
