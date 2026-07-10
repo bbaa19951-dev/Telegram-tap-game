@@ -8,6 +8,7 @@ import Withdraw from "./pages/Withdraw";
 import AdminPanel from "./pages/AdminPanel";
 import LoadingSpinner from "./components/LoadingSpinner";
 import MainLayout from "./components/MainLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -25,22 +26,24 @@ function ProtectedLayout() {
 
 function AppContent() {
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route element={<ProtectedLayout />}>
-        <Route path="/home" element={<Home />} />
-        <Route path="/referral" element={<Referral />} />
-        <Route path="/withdraw" element={<Withdraw />} />
-      </Route>
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <AdminPanel />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/referral" element={<Referral />} />
+          <Route path="/withdraw" element={<Withdraw />} />
+        </Route>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </ErrorBoundary>
   );
 }
 
