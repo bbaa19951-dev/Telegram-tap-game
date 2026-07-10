@@ -20,7 +20,7 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
 function ProtectedLayout() {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <MainLayout loading={true} />;
   if (!user) return <Navigate to="/" replace />;
   return <MainLayout />;
 }
