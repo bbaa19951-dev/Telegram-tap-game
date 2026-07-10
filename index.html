@@ -10,13 +10,26 @@
   <body class="bg-darker text-white">
     <div id="root"></div>
     <script>
-      // Error catcher – shows any JS error on screen
+      // Show full error details
       window.onerror = function(msg, source, line, col, error) {
         var root = document.getElementById('root');
         if (root) {
-          root.innerHTML = '<div style="color:white;padding:20px;font-size:16px;"><strong>Error:</strong><br>' + msg + '<br><small>Line: ' + line + '</small></div>';
+          var errorMsg = '<div style="color:white;padding:20px;font-size:14px;word-break:break-word;">';
+          errorMsg += '<strong>Error:</strong><br>' + msg + '<br>';
+          if (error && error.stack) {
+            errorMsg += '<pre style="font-size:11px;white-space:pre-wrap;">' + error.stack + '</pre>';
+          }
+          errorMsg += '<small>Line: ' + line + '</small></div>';
+          root.innerHTML = errorMsg;
         }
       };
+      // Catch promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div style="color:white;padding:20px;font-size:14px;"><strong>Unhandled Rejection:</strong><br>' + event.reason + '</div>';
+        }
+      });
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
