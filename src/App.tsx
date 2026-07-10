@@ -9,6 +9,7 @@ import AdminPanel from "./pages/AdminPanel";
 import LoadingSpinner from "./components/LoadingSpinner";
 import MainLayout from "./components/MainLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -28,17 +29,47 @@ function AppContent() {
   return (
     <ErrorBoundary>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <RouteErrorBoundary name="Login">
+              <Login />
+            </RouteErrorBoundary>
+          }
+        />
         <Route element={<ProtectedLayout />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/referral" element={<Referral />} />
-          <Route path="/withdraw" element={<Withdraw />} />
+          <Route
+            path="/home"
+            element={
+              <RouteErrorBoundary name="Home">
+                <Home />
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/referral"
+            element={
+              <RouteErrorBoundary name="Referral">
+                <Referral />
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/withdraw"
+            element={
+              <RouteErrorBoundary name="Withdraw">
+                <Withdraw />
+              </RouteErrorBoundary>
+            }
+          />
         </Route>
         <Route
           path="/admin"
           element={
             <ProtectedRoute>
-              <AdminPanel />
+              <RouteErrorBoundary name="AdminPanel">
+                <AdminPanel />
+              </RouteErrorBoundary>
             </ProtectedRoute>
           }
         />
