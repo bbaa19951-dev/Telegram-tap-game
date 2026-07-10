@@ -1,14 +1,14 @@
+// src/main.tsx (replace the entire file)
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Error display helper
 function showError(title: string, detail: string) {
   const root = document.getElementById("root");
   if (root) {
     root.innerHTML = `<div style="color:white;padding:20px;font-size:14px;word-break:break-word;">
-      <strong>${title}</strong><br>${detail}
+      <strong>${title}</strong><br><pre style="white-space:pre-wrap;">${detail}</pre>
     </div>`;
   }
 }
@@ -23,14 +23,13 @@ try {
     </React.StrictMode>
   );
 } catch (err: any) {
-  showError("Render Error", err?.message || String(err));
+  showError("Render Error", err?.stack || err?.message || String(err));
 }
 
-// Global catches
 window.onerror = function (msg, _source, line, _col, error) {
-  showError("Window Error", (error?.message || msg) + "\nLine: " + line);
+  showError("Window Error", (error?.stack || error?.message || msg) + "\nLine: " + line);
 };
 
 window.addEventListener("unhandledrejection", (event) => {
-  showError("Unhandled Promise", event.reason?.message || String(event.reason));
+  showError("Unhandled Promise", event.reason?.stack || event.reason?.message || String(event.reason));
 });
