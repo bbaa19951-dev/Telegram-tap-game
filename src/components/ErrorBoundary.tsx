@@ -20,11 +20,22 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const err = this.state.error;
+      let errorText = "No error object";
+      if (err) {
+        errorText = `name: ${err.name}\nmessage: ${err.message}\nstack: ${err.stack}`;
+        try {
+          // If the error is not a standard Error, JSON it
+          errorText += `\nJSON: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`;
+        } catch {
+          errorText += `\nString: ${String(err)}`;
+        }
+      }
       return (
-        <div style={{ color: "white", padding: 20, wordBreak: "break-word" }}>
+        <div style={{ color: "white", padding: 20, wordBreak: "break-word", fontFamily: "monospace", fontSize: 14 }}>
           <strong>Render Error:</strong>
-          <pre style={{ fontSize: 13, whiteSpace: "pre-wrap" }}>
-            {this.state.error?.message || "Unknown error"}
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>
+            {errorText}
           </pre>
         </div>
       );
