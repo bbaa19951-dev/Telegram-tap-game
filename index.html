@@ -9,6 +9,15 @@
   </head>
   <body class="bg-darker text-white">
     <div id="root"></div>
+    <script>
+      // Error catcher – shows any JS error on screen
+      window.onerror = function(msg, source, line, col, error) {
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div style="color:white;padding:20px;font-size:16px;"><strong>Error:</strong><br>' + msg + '<br><small>Line: ' + line + '</small></div>';
+        }
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
