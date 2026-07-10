@@ -1,11 +1,16 @@
 // src/components/MainLayout.tsx
 import { Outlet } from "react-router-dom";
 import BottomNav from "./BottomNav";
+import LoadingSpinner from "./LoadingSpinner";
 
-export default function MainLayout() {
+interface Props {
+  loading?: boolean;
+}
+
+export default function MainLayout({ loading }: Props) {
   return (
     <div className="pb-16">
-      <Outlet />
+      {loading ? <LoadingSpinner /> : <Outlet />}
       <BottomNav />
     </div>
   );
