@@ -2,20 +2,25 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props { children: ReactNode }
-interface State { hasError: boolean; error: Error | null }
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  componentStack: string | null;
+}
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, componentStack: null };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("ErrorBoundary caught:", error, info);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    this.setState({ componentStack: errorInfo.componentStack || null });
+    console.error("ErrorBoundary caught:", error, errorInfo);
   }
 
   render() {
@@ -25,7 +30,6 @@ export default class ErrorBoundary extends Component<Props, State> {
       if (err) {
         errorText = `name: ${err.name}\nmessage: ${err.message}\nstack: ${err.stack}`;
         try {
-          // If the error is not a standard Error, JSON it
           errorText += `\nJSON: ${JSON.stringify(err, Object.getOwnPropertyNames(err))}`;
         } catch {
           errorText += `\nString: ${String(err)}`;
@@ -37,6 +41,14 @@ export default class ErrorBoundary extends Component<Props, State> {
           <pre style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>
             {errorText}
           </pre>
+          {this.state.componentStack && (
+            <>
+              <strong style={{ marginTop: 20, display: "block" }}>Component Stack:</strong>
+              <pre style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>
+                {this.state.componentStack}
+              </pre>
+            </>
+          )}
         </div>
       );
     }
