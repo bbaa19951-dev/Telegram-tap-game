@@ -27,7 +27,7 @@ try {
 }
 
 // Global catches
-window.onerror = function (msg, source, line, col, error) {
+window.onerror = function (msg, _source, line, _col, error) {
   showError("Window Error", (error?.message || msg) + "\nLine: " + line);
 };
 
