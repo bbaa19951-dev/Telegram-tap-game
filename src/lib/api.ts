@@ -276,3 +276,14 @@ export async function getAdStats(token: string) {
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
         }
+const SUBMIT_PAYMENT_URL = import.meta.env.VITE_SUBMIT_PAYMENT_URL;
+
+export async function submitPayment(token: string, level: string, proof: string) {
+  const res = await fetch(SUBMIT_PAYMENT_URL, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ level, proof }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
