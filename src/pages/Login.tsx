@@ -9,7 +9,6 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Extract start_param from Telegram initData (referral code)
   const getStartParam = (): string | undefined => {
     if (!initData) return undefined;
     const params = new URLSearchParams(initData);
@@ -18,16 +17,15 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!initData) {
-      setError("Open this app inside Telegram");
+      setError("❌ initData missing – open this inside Telegram.");
       return;
     }
     setError("");
     setLoading(true);
     try {
-      const referralCode = getStartParam();
-      await login(initData, referralCode);
+      await login(initData, getStartParam());
     } catch (err: any) {
-      setError(err.message);
+      setError(`❌ ${err.message}\n\nRaw: ${JSON.stringify(err)}`);
     } finally {
       setLoading(false);
     }
@@ -37,7 +35,13 @@ export default function Login() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="glass rounded-2xl p-8 text-center max-w-sm w-full">
         <h1 className="text-3xl font-bold text-gold mb-4">Tap to Earn</h1>
-        <p className="text-gray-300 mb-6">Sign in securely with your Telegram account</p>
+        <p className="text-gray-300 mb-6">Sign in securely with Telegram</p>
+
+        {/* debug: show initData presence */}
+        <p className="text-xs text-gray-500 mb-2">
+          {initData ? "✅ initData ready" : "⚠️ No initData"}
+        </p>
+
         <button
           onClick={handleLogin}
           disabled={loading}
@@ -45,7 +49,12 @@ export default function Login() {
         >
           {loading ? "Verifying..." : "Login with Telegram"}
         </button>
-        {error && <p className="text-red-400 mt-4 text-sm">{error}</p>}
+
+        {error && (
+          <pre className="text-red-400 mt-4 text-xs text-left whitespace-pre-wrap break-words">
+            {error}
+          </pre>
+        )}
       </div>
     </div>
   );
