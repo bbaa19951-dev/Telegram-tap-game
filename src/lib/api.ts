@@ -67,17 +67,32 @@ export async function authenticateTelegram(
   const body: any = { initData };
   if (referralCode) body.referral_code = referralCode;
 
-  const res = await fetch(AUTH_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(AUTH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (err: any) {
+    throw new Error(`Network error: ${err.message}`);
+  }
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Server response (${res.status}): ${text}`);
+  }
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || "Authentication failed");
+    throw new Error(
+      `Auth failed (${res.status}): ${data.error || data.message || text}`
+    );
   }
-  return res.json();
+
+  return data;
 }
 
 // -----------------------------------------------
@@ -260,4 +275,4 @@ export async function getAdStats(token: string) {
   const res = await fetch(AD_STATS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
-}
+        }
