@@ -1,13 +1,22 @@
 // src/pages/Login.tsx
 import { useTelegram } from "../hooks/useTelegram";
 import { useAuth } from "../contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const { initData } = useTelegram();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect to home immediately
+  useEffect(() => {
+    if (user) {
+      navigate("/home", { replace: true });
+    }
+  }, [user, navigate]);
 
   const getStartParam = (): string | undefined => {
     if (!initData) return undefined;
@@ -17,7 +26,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!initData) {
-      setError("❌ initData missing");
+      setError("❌ initData missing – open inside Telegram.");
       return;
     }
     setError("");
@@ -25,13 +34,12 @@ export default function Login() {
 
     try {
       await login(initData, getStartParam());
-      // if successful, this might not run because component unmounts
-      alert("Login successful!"); // temporary confirmation
+      // Navigation is handled by the useEffect above when "user" becomes truthy
     } catch (err: any) {
       const msg = err?.message || String(err);
       setError(`❌ ${msg}\n\nStack: ${err?.stack || "none"}`);
-      // leave loading true so "Verifying..." stays, but we'll also force a visible error
-      setLoading(false); // optional – but we want to show the error
+    } finally {
+      setLoading(false);
     }
   };
 
