@@ -8,12 +8,18 @@ export default function Referral() {
   const { token } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
+  const fetchStats = () => {
     if (!token) return;
+    setError("");
     getReferralStats(token)
       .then(setStats)
-      .catch(console.error);
+      .catch((err) => setError(err.message));
+  };
+
+  useEffect(() => {
+    fetchStats();
   }, [token]);
 
   const BOT_USERNAME = "PointsToBirrBot";
@@ -28,6 +34,18 @@ export default function Referral() {
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="glass rounded-xl p-6 text-center max-w-sm">
+          <p className="text-red-400 mb-4">Failed to load referral stats</p>
+          <pre className="text-xs text-gray-400 mb-4 whitespace-pre-wrap">{error}</pre>
+          <button onClick={fetchStats} className="bg-gold text-black px-4 py-2 rounded-lg">Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!stats) return <LoadingSpinner />;
 
@@ -64,4 +82,4 @@ export default function Referral() {
       </div>
     </div>
   );
-      }
+}
