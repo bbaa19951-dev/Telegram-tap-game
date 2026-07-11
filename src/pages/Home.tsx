@@ -16,14 +16,16 @@ export default function Home() {
   const [claimingDaily, setClaimingDaily] = useState(false);
   const [claimingAuto, setClaimingAuto] = useState(false);
   const [adLoading, setAdLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
 
   const fetchProfile = useCallback(async () => {
     if (!token) return;
+    setProfileError("");
     try {
       const data = await getProfile(token);
       setProfile(data);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setProfileError(err.message);
     }
   }, [token]);
 
@@ -31,7 +33,6 @@ export default function Home() {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Sync taps
   const syncTaps = useCallback(async () => {
     if (localTaps <= 0 || !token || isSending) return;
     setIsSending(true);
@@ -136,6 +137,18 @@ export default function Home() {
       setAdLoading(false);
     }
   };
+
+  if (profileError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="glass rounded-xl p-6 text-center max-w-sm">
+          <p className="text-red-400 mb-4">Failed to load profile</p>
+          <pre className="text-xs text-gray-400 mb-4 whitespace-pre-wrap">{profileError}</pre>
+          <button onClick={fetchProfile} className="bg-gold text-black px-4 py-2 rounded-lg">Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) return <LoadingSpinner />;
 
