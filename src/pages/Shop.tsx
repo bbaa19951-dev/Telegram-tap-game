@@ -1,6 +1,7 @@
+// src/pages/Shop.tsx
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
+import { submitPayment } from "../lib/api";
 import BottomNav from "../components/BottomNav";
 
 const LEVELS = [
@@ -23,26 +24,9 @@ export default function Shop() {
     if (!selected || !proofUrl || !token) return;
     setLoading(true);
     setMessage("");
-
     try {
-      // Use Supabase client with the token (we need to set the auth header)
-      // Since we don't have an Edge Function for payment upload, we'll use the client directly (RLS disabled for service_role? No, we are using anon key. We need a dedicated Edge Function to insert payment.)
-      // Simpler: create a new Edge Function "submit-payment" that inserts a payment request.
-      // For now, we'll just show a message – but we actually need to implement this.
-      // I'll guide the user to create the necessary Edge Function.
-      const res = await fetch(
-        `${import.meta.env.VITE_REQUEST_WITHDRAWAL_URL}`, // placeholder, need new function
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ level: selected, proof: proofUrl }),
-        }
-      );
-      if (!res.ok) throw new Error((await res.json()).error);
-      setMessage("Payment proof submitted! Waiting for admin approval.");
+      await submitPayment(token, selected, proofUrl);
+      setMessage("Proof submitted! Admin will review.");
       setProofUrl("");
       setSelected(null);
     } catch (err: any) {
@@ -75,7 +59,8 @@ export default function Shop() {
       {selected && (
         <div className="glass rounded-xl p-4 flex flex-col gap-2">
           <p className="text-sm text-gray-400">
-            Pay {LEVELS.find((l) => l.key === selected)?.price} ETB to Bank of Abyssinia
+            Pay <strong>{LEVELS.find((l) => l.key === selected)?.price} ETB</strong> to
+            Bank of Abyssinia.
           </p>
           <input
             type="text"
@@ -98,4 +83,4 @@ export default function Shop() {
       <BottomNav />
     </div>
   );
-            }
+}
