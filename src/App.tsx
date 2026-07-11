@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Referral from "./pages/Referral";
 import Withdraw from "./pages/Withdraw";
+import Shop from "./pages/Shop";
 import AdminPanel from "./pages/AdminPanel";
 import LoadingSpinner from "./components/LoadingSpinner";
 import MainLayout from "./components/MainLayout";
@@ -59,6 +60,14 @@ function AppContent() {
             element={
               <RouteErrorBoundary name="Withdraw">
                 <Withdraw />
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/shop"
+            element={
+              <RouteErrorBoundary name="Shop">
+                <Shop />
               </RouteErrorBoundary>
             }
           />
