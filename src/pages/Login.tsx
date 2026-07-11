@@ -17,17 +17,21 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!initData) {
-      setError("❌ initData missing – open this inside Telegram.");
+      setError("❌ initData missing");
       return;
     }
     setError("");
     setLoading(true);
+
     try {
       await login(initData, getStartParam());
+      // if successful, this might not run because component unmounts
+      alert("Login successful!"); // temporary confirmation
     } catch (err: any) {
-      setError(`❌ ${err.message}\n\nRaw: ${JSON.stringify(err)}`);
-    } finally {
-      setLoading(false);
+      const msg = err?.message || String(err);
+      setError(`❌ ${msg}\n\nStack: ${err?.stack || "none"}`);
+      // leave loading true so "Verifying..." stays, but we'll also force a visible error
+      setLoading(false); // optional – but we want to show the error
     }
   };
 
@@ -37,7 +41,6 @@ export default function Login() {
         <h1 className="text-3xl font-bold text-gold mb-4">Tap to Earn</h1>
         <p className="text-gray-300 mb-6">Sign in securely with Telegram</p>
 
-        {/* debug: show initData presence */}
         <p className="text-xs text-gray-500 mb-2">
           {initData ? "✅ initData ready" : "⚠️ No initData"}
         </p>
@@ -51,9 +54,11 @@ export default function Login() {
         </button>
 
         {error && (
-          <pre className="text-red-400 mt-4 text-xs text-left whitespace-pre-wrap break-words">
-            {error}
-          </pre>
+          <div className="mt-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-left">
+            <pre className="text-red-300 text-xs whitespace-pre-wrap break-words">
+              {error}
+            </pre>
+          </div>
         )}
       </div>
     </div>
