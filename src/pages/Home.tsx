@@ -1,6 +1,7 @@
 // src/pages/Home.tsx
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   getProfile,
   sendTaps,
@@ -17,6 +18,7 @@ const TAP_BATCH_SIZE = 10;
 
 export default function Home() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [localTaps, setLocalTaps] = useState(0);
   const [isSending, setIsSending] = useState(false);
@@ -316,7 +318,17 @@ export default function Home() {
         </button>
       </div>
 
+      {/* Admin Panel button – only visible to admin users */}
+      {profile.is_admin && (
+        <button
+          onClick={() => navigate("/admin")}
+          className="w-full max-w-sm py-2 rounded-lg bg-red-600 text-white font-semibold"
+        >
+          Admin Panel
+        </button>
+      )}
+
       <BottomNav />
     </div>
   );
-  }
+      }
