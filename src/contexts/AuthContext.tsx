@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user: telegramUser, initData } = useTelegram(); // get current Telegram user from WebApp
+  const { user: telegramUser } = useTelegram(); // only need the current Telegram user
 
   // Check saved session and match with current Telegram user
   useEffect(() => {
