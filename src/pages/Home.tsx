@@ -226,6 +226,10 @@ export default function Home() {
       </div>
 
       {/* Tap Button */}
+      {/* DEBUG LINE ADDED HERE */}
+      <p className="text-xs text-white text-center mt-2">
+        Tap image: {tapImage || "none"}
+      </p>
       <button
         onClick={handleTap}
         disabled={isSending}
@@ -317,4 +321,4 @@ export default function Home() {
       <BottomNav />
     </div>
   );
-      }
+        }
