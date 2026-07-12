@@ -60,6 +60,24 @@ export function authHeaders(token: string): HeadersInit {
 }
 
 // -----------------------------------------------
+// Request wrapper – auto‑logout on 401
+// -----------------------------------------------
+async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const res = await fetch(url, options);
+
+  // If token expired, clear stored data and reload
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.hash = "";       // remove any logout hash
+    window.location.reload();       // forces login screen
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  return res;
+}
+
+// -----------------------------------------------
 // Auth
 // -----------------------------------------------
 export async function authenticateTelegram(
@@ -69,41 +87,25 @@ export async function authenticateTelegram(
   const body: any = { initData };
   if (referralCode) body.referral_code = referralCode;
 
-  let res: Response;
-  try {
-    res = await fetch(AUTH_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch (err: any) {
-    throw new Error(`Network error: ${err.message}`);
-  }
-
-  const text = await res.text();
-  let data: any;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(`Server response (${res.status}): ${text}`);
-  }
+  const res = await fetch(AUTH_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
   if (!res.ok) {
-    throw new Error(
-      `Auth failed (${res.status}): ${data.error || data.message || text}`
-    );
+    const err = await res.json();
+    throw new Error(err.error || "Authentication failed");
   }
 
-  return data;
+  return res.json();
 }
 
 // -----------------------------------------------
 // Profile & Game
 // -----------------------------------------------
 export async function getProfile(token: string): Promise<Profile> {
-  const res = await fetch(PROFILE_URL, {
-    headers: authHeaders(token),
-  });
+  const res = await apiFetch(PROFILE_URL, { headers: authHeaders(token) });
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error);
@@ -112,7 +114,7 @@ export async function getProfile(token: string): Promise<Profile> {
 }
 
 export async function sendTaps(token: string, tapCount: number) {
-  const res = await fetch(TAP_URL, {
+  const res = await apiFetch(TAP_URL, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ tap_count: tapCount }),
@@ -125,7 +127,7 @@ export async function sendTaps(token: string, tapCount: number) {
 }
 
 export async function claimDailyReward(token: string) {
-  const res = await fetch(DAILY_REWARD_URL, {
+  const res = await apiFetch(DAILY_REWARD_URL, {
     method: "POST",
     headers: authHeaders(token),
   });
@@ -137,7 +139,7 @@ export async function claimDailyReward(token: string) {
 }
 
 export async function claimAutoTap(token: string) {
-  const res = await fetch(AUTO_TAP_URL, {
+  const res = await apiFetch(AUTO_TAP_URL, {
     method: "POST",
     headers: authHeaders(token),
   });
@@ -152,9 +154,7 @@ export async function claimAutoTap(token: string) {
 // Referral
 // -----------------------------------------------
 export async function getReferralStats(token: string) {
-  const res = await fetch(REFERRAL_STATS_URL, {
-    headers: authHeaders(token),
-  });
+  const res = await apiFetch(REFERRAL_STATS_URL, { headers: authHeaders(token) });
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error);
@@ -166,7 +166,7 @@ export async function getReferralStats(token: string) {
 // Admin APIs
 // -----------------------------------------------
 export async function getAdminStats(token: string) {
-  const res = await fetch(ADMIN_STATS_URL, { headers: authHeaders(token) });
+  const res = await apiFetch(ADMIN_STATS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -174,7 +174,7 @@ export async function getAdminStats(token: string) {
 export async function getAdminUsers(token: string, search?: string) {
   const url = new URL(ADMIN_USERS_URL);
   if (search) url.searchParams.set("search", search);
-  const res = await fetch(url, { headers: authHeaders(token) });
+  const res = await apiFetch(url, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -183,7 +183,7 @@ export async function banUser(token: string, userId: string) {
   const url = new URL(ADMIN_USERS_URL);
   url.searchParams.set("action", "ban");
   url.searchParams.set("user_id", userId);
-  const res = await fetch(url, { method: "POST", headers: authHeaders(token) });
+  const res = await apiFetch(url, { method: "POST", headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -192,13 +192,13 @@ export async function unbanUser(token: string, userId: string) {
   const url = new URL(ADMIN_USERS_URL);
   url.searchParams.set("action", "unban");
   url.searchParams.set("user_id", userId);
-  const res = await fetch(url, { method: "POST", headers: authHeaders(token) });
+  const res = await apiFetch(url, { method: "POST", headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
 
 export async function getAdminPayments(token: string) {
-  const res = await fetch(ADMIN_PAYMENTS_URL, { headers: authHeaders(token) });
+  const res = await apiFetch(ADMIN_PAYMENTS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -209,7 +209,7 @@ export async function processPayment(
   action: "approve" | "reject",
   level?: string
 ) {
-  const res = await fetch(ADMIN_PAYMENTS_URL, {
+  const res = await apiFetch(ADMIN_PAYMENTS_URL, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ paymentId, action, level }),
@@ -219,7 +219,7 @@ export async function processPayment(
 }
 
 export async function getAdminWithdrawals(token: string) {
-  const res = await fetch(ADMIN_WITHDRAWALS_URL, { headers: authHeaders(token) });
+  const res = await apiFetch(ADMIN_WITHDRAWALS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -229,7 +229,7 @@ export async function processWithdrawal(
   withdrawalId: string,
   action: "approve" | "reject"
 ) {
-  const res = await fetch(ADMIN_WITHDRAWALS_URL, {
+  const res = await apiFetch(ADMIN_WITHDRAWALS_URL, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ withdrawalId, action }),
@@ -246,7 +246,7 @@ export async function requestWithdrawal(
   points: number,
   bankDetails: string
 ) {
-  const res = await fetch(REQUEST_WITHDRAWAL_URL, {
+  const res = await apiFetch(REQUEST_WITHDRAWAL_URL, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ points, bank_details: bankDetails }),
@@ -256,7 +256,7 @@ export async function requestWithdrawal(
 }
 
 export async function getUserWithdrawals(token: string) {
-  const res = await fetch(GET_WITHDRAWALS_URL, { headers: authHeaders(token) });
+  const res = await apiFetch(GET_WITHDRAWALS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -265,7 +265,7 @@ export async function getUserWithdrawals(token: string) {
 // Ad Reward & Stats
 // -----------------------------------------------
 export async function claimAdReward(token: string) {
-  const res = await fetch(AD_REWARD_URL, {
+  const res = await apiFetch(AD_REWARD_URL, {
     method: "POST",
     headers: authHeaders(token),
   });
@@ -274,7 +274,7 @@ export async function claimAdReward(token: string) {
 }
 
 export async function getAdStats(token: string) {
-  const res = await fetch(AD_STATS_URL, { headers: authHeaders(token) });
+  const res = await apiFetch(AD_STATS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -283,7 +283,7 @@ export async function getAdStats(token: string) {
 // Membership (Shop)
 // -----------------------------------------------
 export async function submitPayment(token: string, level: string, proof: string) {
-  const res = await fetch(SUBMIT_PAYMENT_URL, {
+  const res = await apiFetch(SUBMIT_PAYMENT_URL, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ level, proof }),
@@ -299,7 +299,7 @@ export async function getAppSettings(): Promise<{
   bank_details: string;
   tap_image_url: string | null;
 }> {
-  const res = await fetch(APP_SETTINGS_URL);
+  const res = await fetch(APP_SETTINGS_URL);   // no auth needed – it's public
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
-  }
+}
