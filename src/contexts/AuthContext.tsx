@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { authenticateTelegram } from "../lib/api";
+import { useTelegram } from "../hooks/useTelegram";
 
 interface User {
   id: number;
@@ -30,16 +31,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user: telegramUser, initData } = useTelegram(); // get current Telegram user from WebApp
 
+  // Check saved session and match with current Telegram user
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
+
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      const parsedUser: User = JSON.parse(savedUser);
+
+      // If the current Telegram user doesn't match the saved user, force logout
+      if (telegramUser && telegramUser.id !== parsedUser.id) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setToken(null);
+        setUser(null);
+      } else {
+        setToken(savedToken);
+        setUser(parsedUser);
+      }
     }
     setLoading(false);
-  }, []);
+  }, [telegramUser]);
 
   const login = async (initData: string, referralCode?: string) => {
     setLoading(true);
