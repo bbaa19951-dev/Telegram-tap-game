@@ -1,6 +1,7 @@
 // src/App.tsx
+import { useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Referral from "./pages/Referral";
@@ -26,9 +27,25 @@ function ProtectedLayout() {
   return <MainLayout />;
 }
 
+function ForceLogout() {
+  const location = useLocation();
+  useEffect(() => {
+    // If URL has #logout, clear saved data and redirect to login
+    if (location.hash === "#logout") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.hash = ""; // clear hash
+      window.location.reload();
+    }
+  }, [location.hash]);
+
+  return null;
+}
+
 function AppContent() {
   return (
     <ErrorBoundary>
+      <ForceLogout />
       <Routes>
         <Route
           path="/"
@@ -39,48 +56,14 @@ function AppContent() {
           }
         />
         <Route element={<ProtectedLayout />}>
-          <Route
-            path="/home"
-            element={
-              <RouteErrorBoundary name="Home">
-                <Home />
-              </RouteErrorBoundary>
-            }
-          />
-          <Route
-            path="/referral"
-            element={
-              <RouteErrorBoundary name="Referral">
-                <Referral />
-              </RouteErrorBoundary>
-            }
-          />
-          <Route
-            path="/withdraw"
-            element={
-              <RouteErrorBoundary name="Withdraw">
-                <Withdraw />
-              </RouteErrorBoundary>
-            }
-          />
-          <Route
-            path="/shop"
-            element={
-              <RouteErrorBoundary name="Shop">
-                <Shop />
-              </RouteErrorBoundary>
-            }
-          />
+          <Route path="/home" element={<RouteErrorBoundary name="Home"><Home /></RouteErrorBoundary>} />
+          <Route path="/referral" element={<RouteErrorBoundary name="Referral"><Referral /></RouteErrorBoundary>} />
+          <Route path="/withdraw" element={<RouteErrorBoundary name="Withdraw"><Withdraw /></RouteErrorBoundary>} />
+          <Route path="/shop" element={<RouteErrorBoundary name="Shop"><Shop /></RouteErrorBoundary>} />
         </Route>
         <Route
           path="/admin"
-          element={
-            <ProtectedRoute>
-              <RouteErrorBoundary name="AdminPanel">
-                <AdminPanel />
-              </RouteErrorBoundary>
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><RouteErrorBoundary name="AdminPanel"><AdminPanel /></RouteErrorBoundary></ProtectedRoute>}
         />
       </Routes>
     </ErrorBoundary>
