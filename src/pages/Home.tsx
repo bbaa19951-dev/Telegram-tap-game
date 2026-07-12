@@ -25,7 +25,6 @@ export default function Home() {
   const [adLoading, setAdLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [tapImage, setTapImage] = useState<string | null>(null);
-  const [settingsError, setSettingsError] = useState("");
 
   const fetchProfile = useCallback(async () => {
     if (!token) return;
@@ -38,19 +37,14 @@ export default function Home() {
     }
   }, [token]);
 
-  // Fetch app settings (tap image) with error capture
+  // Fetch app settings (tap image) silently
   useEffect(() => {
-    setSettingsError("");
     getAppSettings()
       .then((settings) => {
-        if (settings.tap_image_url) {
-          setTapImage(settings.tap_image_url);
-        } else {
-          setSettingsError("No tap_image_url in settings");
-        }
+        if (settings.tap_image_url) setTapImage(settings.tap_image_url);
       })
-      .catch((err) => {
-        setSettingsError(err.message);
+      .catch(() => {
+        // fail silently – the gold button will appear
       });
   }, []);
 
@@ -233,16 +227,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Debug info */}
-      <p className="text-xs text-white text-center mt-2">
-        Tap image: {tapImage || "none"}
-      </p>
-      {settingsError && (
-        <p className="text-xs text-red-400 text-center mt-1">
-          Settings error: {settingsError}
-        </p>
-      )}
-
       {/* Tap Button */}
       <button
         onClick={handleTap}
@@ -335,4 +319,4 @@ export default function Home() {
       <BottomNav />
     </div>
   );
-            }
+  }
