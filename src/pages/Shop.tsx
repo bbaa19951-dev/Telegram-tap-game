@@ -1,7 +1,7 @@
 // src/pages/Shop.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { submitPayment } from "../lib/api";
+import { submitPayment, getAppSettings } from "../lib/api";
 import BottomNav from "../components/BottomNav";
 
 const LEVELS = [
@@ -19,6 +19,17 @@ export default function Shop() {
   const [proofUrl, setProofUrl] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [bankDetails, setBankDetails] = useState(
+    "Bank of Abyssinia\nAccount: 165669398\nName: Barsanaol Kumsa"
+  );
+
+  useEffect(() => {
+    getAppSettings()
+      .then((settings) => {
+        if (settings.bank_details) setBankDetails(settings.bank_details);
+      })
+      .catch(console.error);
+  }, []);
 
   const handleSubmit = async () => {
     if (!selected || !proofUrl || !token) return;
@@ -58,9 +69,9 @@ export default function Shop() {
 
       {selected && (
         <div className="glass rounded-xl p-4 flex flex-col gap-2">
-          <p className="text-sm text-gray-400">
-            Pay <strong>{LEVELS.find((l) => l.key === selected)?.price} ETB</strong> to
-            Bank of Abyssinia.
+          <p className="text-sm text-gray-400 whitespace-pre-line">
+            Pay <strong>{LEVELS.find((l) => l.key === selected)?.price} ETB</strong> to:
+            {bankDetails}
           </p>
           <input
             type="text"
