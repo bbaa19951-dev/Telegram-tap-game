@@ -65,12 +65,11 @@ export function authHeaders(token: string): HeadersInit {
 async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const res = await fetch(url, options);
 
-  // If token expired, clear stored data and reload
   if (res.status === 401) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.hash = "";       // remove any logout hash
-    window.location.reload();       // forces login screen
+    window.location.hash = "";
+    window.location.reload();
     throw new Error("Session expired. Please log in again.");
   }
 
@@ -174,7 +173,7 @@ export async function getAdminStats(token: string) {
 export async function getAdminUsers(token: string, search?: string) {
   const url = new URL(ADMIN_USERS_URL);
   if (search) url.searchParams.set("search", search);
-  const res = await apiFetch(url, { headers: authHeaders(token) });
+  const res = await apiFetch(url.toString(), { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -183,7 +182,7 @@ export async function banUser(token: string, userId: string) {
   const url = new URL(ADMIN_USERS_URL);
   url.searchParams.set("action", "ban");
   url.searchParams.set("user_id", userId);
-  const res = await apiFetch(url, { method: "POST", headers: authHeaders(token) });
+  const res = await apiFetch(url.toString(), { method: "POST", headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -192,7 +191,7 @@ export async function unbanUser(token: string, userId: string) {
   const url = new URL(ADMIN_USERS_URL);
   url.searchParams.set("action", "unban");
   url.searchParams.set("user_id", userId);
-  const res = await apiFetch(url, { method: "POST", headers: authHeaders(token) });
+  const res = await apiFetch(url.toString(), { method: "POST", headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
@@ -299,7 +298,7 @@ export async function getAppSettings(): Promise<{
   bank_details: string;
   tap_image_url: string | null;
 }> {
-  const res = await fetch(APP_SETTINGS_URL);   // no auth needed – it's public
+  const res = await fetch(APP_SETTINGS_URL);
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
-}
+                                }
