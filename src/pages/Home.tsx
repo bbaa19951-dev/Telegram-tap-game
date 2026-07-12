@@ -24,11 +24,7 @@ export default function Home() {
   const [claimingAuto, setClaimingAuto] = useState(false);
   const [adLoading, setAdLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
-
-  // HARDCODED IMAGE URL FOR TESTING – REMOVE THIS LATER
-  const hardcodedUrl =
-    "https://xlmkianuhbqssfelnpiq.supabase.co/storage/v1/object/public/assets/file_00000000ce547230a28689e0654b2ca6.png";
-  const [tapImage, setTapImage] = useState<string | null>(hardcodedUrl);
+  const [tapImage, setTapImage] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
     if (!token) return;
@@ -41,7 +37,7 @@ export default function Home() {
     }
   }, [token]);
 
-  // Fetch app settings (will be used after we remove hardcode)
+  // Fetch app settings (tap image) dynamically
   useEffect(() => {
     getAppSettings()
       .then((settings) => {
@@ -229,7 +225,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* DEBUG LINE */}
+      {/* Debug line – shows the current image URL */}
       <p className="text-xs text-white text-center mt-2">
         Tap image: {tapImage || "none"}
       </p>
