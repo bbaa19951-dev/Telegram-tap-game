@@ -17,6 +17,8 @@ const REQUEST_WITHDRAWAL_URL = import.meta.env.VITE_REQUEST_WITHDRAWAL_URL;
 const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
 const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
 const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
+const APP_SETTINGS_URL = import.meta.env.VITE_APP_SETTINGS_URL;
+const SUBMIT_PAYMENT_URL = import.meta.env.VITE_SUBMIT_PAYMENT_URL;
 
 // -----------------------------------------------
 // Types
@@ -275,9 +277,11 @@ export async function getAdStats(token: string) {
   const res = await fetch(AD_STATS_URL, { headers: authHeaders(token) });
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
-        }
-const SUBMIT_PAYMENT_URL = import.meta.env.VITE_SUBMIT_PAYMENT_URL;
+}
 
+// -----------------------------------------------
+// Membership (Shop)
+// -----------------------------------------------
 export async function submitPayment(token: string, level: string, proof: string) {
   const res = await fetch(SUBMIT_PAYMENT_URL, {
     method: "POST",
@@ -287,3 +291,15 @@ export async function submitPayment(token: string, level: string, proof: string)
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
+
+// -----------------------------------------------
+// App Settings (bank details, tap image, etc.)
+// -----------------------------------------------
+export async function getAppSettings(): Promise<{
+  bank_details: string;
+  tap_image_url: string | null;
+}> {
+  const res = await fetch(APP_SETTINGS_URL);
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+  }
