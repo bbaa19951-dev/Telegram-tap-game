@@ -162,6 +162,7 @@ export default function Home() {
     }
   };
 
+  // ---------- ERROR STATE WITH LOGOUT BUTTON ----------
   if (profileError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
@@ -171,10 +172,15 @@ export default function Home() {
             {profileError}
           </pre>
           <button
-            onClick={fetchProfile}
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              window.location.hash = "";
+              window.location.reload();
+            }}
             className="bg-gold text-black px-4 py-2 rounded-lg"
           >
-            Retry
+            Logout & Reload
           </button>
         </div>
       </div>
@@ -311,4 +317,4 @@ export default function Home() {
       <BottomNav />
     </div>
   );
-        }
+      }
