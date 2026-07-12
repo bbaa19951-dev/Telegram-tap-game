@@ -103,8 +103,7 @@ export default function Home() {
     setProfile((prev: any) => ({
       ...prev,
       energy: prev.energy - 1,
-      total_points:
-        prev.total_points + multiplierFromLevel(prev.membership_level),
+      total_points: prev.total_points + multiplierFromLevel(prev.membership_level),
     }));
     setLocalTaps((prev) => prev + 1);
   };
@@ -225,12 +224,17 @@ export default function Home() {
         onClick={handleTap}
         disabled={isSending}
         className="w-36 h-36 rounded-full flex items-center justify-center active:scale-95 transition select-none focus:outline-none shadow-2xl overflow-hidden"
-        style={{
-          backgroundImage: tapImage ? `url(${tapImage})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          background: tapImage ? undefined : "linear-gradient(to bottom, #facc15, #d97706)",
-        }}
+        style={
+          tapImage
+            ? {
+                backgroundImage: `url(${tapImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {
+                background: "linear-gradient(to bottom, #facc15, #d97706)",
+              }
+        }
       >
         {!tapImage && (
           <span className="text-3xl font-black text-black">TAP</span>
@@ -307,4 +311,4 @@ export default function Home() {
       <BottomNav />
     </div>
   );
-}
+        }
