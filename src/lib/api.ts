@@ -17,12 +17,10 @@ const REQUEST_WITHDRAWAL_URL = import.meta.env.VITE_REQUEST_WITHDRAWAL_URL;
 const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
 const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
 const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
-const SUBMIT_PAYMENT_URL = import.meta.env.VITE_SUBMIT_PAYMENT_URL;
 
-// 🔧 Hard‑coded so the Admin Panel works immediately
+// 🔧 Hard‑coded for immediate functionality
 const ADMIN_PAYMENTS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/admin-payments";
-
-// 🔧 Hard‑coded app settings (bank details, tap image)
+const SUBMIT_PAYMENT_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/submit-payment";
 const APP_SETTINGS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/app-settings";
 
 // -----------------------------------------------
@@ -306,4 +304,4 @@ export async function getAppSettings(): Promise<{
   const res = await fetch(APP_SETTINGS_URL);
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
-                                         }
+}
