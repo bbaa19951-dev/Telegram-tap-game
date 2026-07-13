@@ -1,9 +1,10 @@
 // src/lib/api.ts
 
 // -----------------------------------------------
-// Base URLs from environment
+// Base URLs – hard‑coded where necessary to avoid
+// missing Vercel environment variables
 // -----------------------------------------------
-const AUTH_URL = import.meta.env.VITE_AUTH_FUNCTION_URL;
+const AUTH_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/auth-telegram";
 const PROFILE_URL = import.meta.env.VITE_PROFILE_FUNCTION_URL;
 const TAP_URL = import.meta.env.VITE_TAP_FUNCTION_URL;
 const DAILY_REWARD_URL = import.meta.env.VITE_DAILY_REWARD_FUNCTION_URL;
@@ -11,14 +12,18 @@ const AUTO_TAP_URL = import.meta.env.VITE_AUTO_TAP_FUNCTION_URL;
 const REFERRAL_STATS_URL = import.meta.env.VITE_REFERRAL_STATS_URL;
 const ADMIN_STATS_URL = import.meta.env.VITE_ADMIN_STATS_URL;
 const ADMIN_USERS_URL = import.meta.env.VITE_ADMIN_USERS_URL;
-const ADMIN_PAYMENTS_URL = import.meta.env.VITE_ADMIN_PAYMENTS_URL;
 const ADMIN_WITHDRAWALS_URL = import.meta.env.VITE_ADMIN_WITHDRAWALS_URL;
 const REQUEST_WITHDRAWAL_URL = import.meta.env.VITE_REQUEST_WITHDRAWAL_URL;
 const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
 const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
 const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
-const APP_SETTINGS_URL = import.meta.env.VITE_APP_SETTINGS_URL;
 const SUBMIT_PAYMENT_URL = import.meta.env.VITE_SUBMIT_PAYMENT_URL;
+
+// 🔧 Hard‑coded so the Admin Panel works immediately
+const ADMIN_PAYMENTS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/admin-payments";
+
+// 🔧 Hard‑coded app settings (bank details, tap image)
+const APP_SETTINGS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/app-settings";
 
 // -----------------------------------------------
 // Types
@@ -301,4 +306,4 @@ export async function getAppSettings(): Promise<{
   const res = await fetch(APP_SETTINGS_URL);
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
-                                }
+                                         }
