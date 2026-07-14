@@ -117,18 +117,67 @@ export default function AdminPanel() {
 
       {tab === "payments" && (
         <div>
+          {payments.length === 0 && (
+            <p className="text-gray-500 text-sm text-center py-4">No payments found.</p>
+          )}
           {payments.map(p => (
-            <div key={p.id} className="glass rounded-lg p-3 mb-2 flex justify-between items-center">
-              <div>
-                <p>User: {p.users?.first_name || p.user_id}</p>
-                <p className="text-xs">Amount: {p.amount} ETB</p>
-                <p className="text-xs">Status: {p.status}</p>
-              </div>
-              {p.status === "pending" && (
-                <div className="flex gap-1">
-                  <button onClick={() => handlePaymentAction(p.id, "approve")} className="bg-green-600 px-2 py-1 rounded text-sm">Approve</button>
-                  <button onClick={() => handlePaymentAction(p.id, "reject")} className="bg-red-600 px-2 py-1 rounded text-sm">Reject</button>
+            <div key={p.id} className="glass rounded-lg p-4 mb-3 flex flex-col gap-2">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white">
+                    {p.users?.first_name || "Unknown User"}
+                    {p.users?.username && (
+                      <span className="text-gray-400 text-xs ml-1">@{p.users.username}</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Amount: <span className="text-gold font-bold">{p.amount} ETB</span>
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Status:{" "}
+                    <span
+                      className={`${
+                        p.status === "approved"
+                          ? "text-green-400"
+                          : p.status === "rejected"
+                          ? "text-red-400"
+                          : "text-yellow-400"
+                      }`}
+                    >
+                      {p.status}
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(p.created_at).toLocaleString()}
+                  </p>
                 </div>
+                {p.status === "pending" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePaymentAction(p.id, "approve")}
+                      className="bg-green-600 px-3 py-1 rounded text-xs font-bold"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handlePaymentAction(p.id, "reject")}
+                      className="bg-red-600 px-3 py-1 rounded text-xs font-bold"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Payment Proof Link */}
+              {p.payment_proof && (
+                <a
+                  href={p.payment_proof}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 text-xs underline break-all mt-2"
+                >
+                  📎 View Payment Proof
+                </a>
               )}
             </div>
           ))}
