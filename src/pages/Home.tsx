@@ -1,14 +1,12 @@
 // src/pages/Home.tsx
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import {
   getProfile,
   sendTaps,
   claimDailyReward,
   claimAutoTap,
   claimAdReward,
-  getAppSettings,
 } from "../lib/api";
 import LoadingSpinner from "../components/LoadingSpinner";
 import BottomNav from "../components/BottomNav";
@@ -18,7 +16,6 @@ const TAP_BATCH_SIZE = 10;
 
 export default function Home() {
   const { token } = useAuth();
-  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [localTaps, setLocalTaps] = useState(0);
   const [isSending, setIsSending] = useState(false);
@@ -26,7 +23,6 @@ export default function Home() {
   const [claimingAuto, setClaimingAuto] = useState(false);
   const [adLoading, setAdLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
-  const [tapImage, setTapImage] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
     if (!token) return;
@@ -38,17 +34,6 @@ export default function Home() {
       setProfileError(err.message);
     }
   }, [token]);
-
-  // Fetch app settings (tap image) silently
-  useEffect(() => {
-    getAppSettings()
-      .then((settings) => {
-        if (settings.tap_image_url) setTapImage(settings.tap_image_url);
-      })
-      .catch(() => {
-        // fail silently – the gold button will appear
-      });
-  }, []);
 
   useEffect(() => {
     fetchProfile();
@@ -166,7 +151,6 @@ export default function Home() {
     }
   };
 
-  // ---------- ERROR STATE WITH LOGOUT BUTTON ----------
   if (profileError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
@@ -233,22 +217,9 @@ export default function Home() {
       <button
         onClick={handleTap}
         disabled={isSending}
-        className="w-36 h-36 rounded-full flex items-center justify-center active:scale-95 transition select-none focus:outline-none shadow-2xl overflow-hidden"
-        style={
-          tapImage
-            ? {
-                backgroundImage: `url(${tapImage})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : {
-                background: "linear-gradient(to bottom, #facc15, #d97706)",
-              }
-        }
+        className="w-36 h-36 rounded-full bg-gradient-to-b from-yellow-400 to-amber-600 shadow-2xl flex items-center justify-center text-3xl font-black text-black active:scale-95 transition select-none focus:outline-none"
       >
-        {!tapImage && (
-          <span className="text-3xl font-black text-black">TAP</span>
-        )}
+        TAP
       </button>
 
       {/* Rewards Section */}
@@ -318,17 +289,15 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Admin Panel button – only visible to admin users */}
-      {profile.is_admin && (
-        <button
-          onClick={() => navigate("/admin")}
-          className="w-full max-w-sm py-2 rounded-lg bg-red-600 text-white font-semibold"
-        >
-          Admin Panel
-        </button>
-      )}
+      {/* Refresh Profile Button */}
+      <button
+        onClick={() => fetchProfile()}
+        className="w-full max-w-sm py-2 rounded-lg bg-gray-700 text-gray-300 text-sm underline hover:text-white"
+      >
+        Refresh Profile
+      </button>
 
       <BottomNav />
     </div>
   );
-            }
+}
