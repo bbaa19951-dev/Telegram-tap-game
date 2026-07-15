@@ -1,8 +1,7 @@
 // src/lib/api.ts
 
 // -----------------------------------------------
-// Base URLs – hard‑coded where necessary to avoid
-// missing Vercel environment variables
+// Base URLs – hard‑coded where necessary
 // -----------------------------------------------
 const AUTH_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/auth-telegram";
 const PROFILE_URL = import.meta.env.VITE_PROFILE_FUNCTION_URL;
@@ -18,10 +17,11 @@ const GET_WITHDRAWALS_URL = import.meta.env.VITE_GET_WITHDRAWALS_URL;
 const AD_REWARD_URL = import.meta.env.VITE_AD_REWARD_URL;
 const AD_STATS_URL = import.meta.env.VITE_AD_STATS_URL;
 
-// 🔧 Hard‑coded for immediate functionality
+// Hardcoded
 const ADMIN_PAYMENTS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/admin-payments";
 const SUBMIT_PAYMENT_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/submit-payment";
 const APP_SETTINGS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/app-settings";
+const GET_BANKS_URL = "https://xlmkianuhbqssfelnpiq.supabase.co/functions/v1/get-banks";
 
 // -----------------------------------------------
 // Types
@@ -62,12 +62,8 @@ export function authHeaders(token: string): HeadersInit {
   };
 }
 
-// -----------------------------------------------
-// Request wrapper – auto‑logout on 401
-// -----------------------------------------------
 async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const res = await fetch(url, options);
-
   if (res.status === 401) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -75,7 +71,6 @@ async function apiFetch(url: string, options: RequestInit = {}): Promise<Respons
     window.location.reload();
     throw new Error("Session expired. Please log in again.");
   }
-
   return res;
 }
 
@@ -88,18 +83,15 @@ export async function authenticateTelegram(
 ): Promise<AuthResponse> {
   const body: any = { initData };
   if (referralCode) body.referral_code = referralCode;
-
   const res = await fetch(AUTH_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error || "Authentication failed");
   }
-
   return res.json();
 }
 
@@ -108,10 +100,7 @@ export async function authenticateTelegram(
 // -----------------------------------------------
 export async function getProfile(token: string): Promise<Profile> {
   const res = await apiFetch(PROFILE_URL, { headers: authHeaders(token) });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
+  if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
 
@@ -121,10 +110,7 @@ export async function sendTaps(token: string, tapCount: number) {
     headers: authHeaders(token),
     body: JSON.stringify({ tap_count: tapCount }),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
+  if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
 
@@ -133,10 +119,7 @@ export async function claimDailyReward(token: string) {
     method: "POST",
     headers: authHeaders(token),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
+  if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
 
@@ -145,10 +128,7 @@ export async function claimAutoTap(token: string) {
     method: "POST",
     headers: authHeaders(token),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
+  if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
 
@@ -157,10 +137,7 @@ export async function claimAutoTap(token: string) {
 // -----------------------------------------------
 export async function getReferralStats(token: string) {
   const res = await apiFetch(REFERRAL_STATS_URL, { headers: authHeaders(token) });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error);
-  }
+  if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
 
@@ -295,7 +272,7 @@ export async function submitPayment(token: string, level: string, proof: string)
 }
 
 // -----------------------------------------------
-// App Settings (bank details, tap image, etc.)
+// App Settings
 // -----------------------------------------------
 export async function getAppSettings(): Promise<{
   bank_details: string;
@@ -305,6 +282,10 @@ export async function getAppSettings(): Promise<{
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
+
+// -----------------------------------------------
+// Banks (for withdrawal selection)
+// -----------------------------------------------
 export async function getBanks() {
   const res = await fetch(GET_BANKS_URL);
   if (!res.ok) throw new Error((await res.json()).error);
