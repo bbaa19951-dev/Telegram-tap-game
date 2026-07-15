@@ -305,3 +305,8 @@ export async function getAppSettings(): Promise<{
   if (!res.ok) throw new Error((await res.json()).error);
   return res.json();
 }
+export async function getBanks() {
+  const res = await fetch(GET_BANKS_URL);
+  if (!res.ok) throw new Error((await res.json()).error);
+  return res.json();
+}
